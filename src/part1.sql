@@ -12,5 +12,6 @@ CREATE TABLE Verter (
     id bigint primary key,
     Check bigint not null,
     State varchar not null,
-    Time time not null default current_time
-)
+    Time time not null default current_time,
+    constraint fk_verter_checks_id foreign key (id) references Checks(id)
+);
