@@ -6,7 +6,7 @@ CREATE TABLE Peers (
 );
 CREATE TABLE Tasks (
     Title VARCHAR PRIMARY KEY,
-    ParentTask VARCHAR NOT NULL,
+    ParentTask VARCHAR,
     MaxXP INT NOT NULL
 );
 CREATE TYPE check_status AS ENUM ('Start', 'Success', 'Failure');
@@ -68,6 +68,7 @@ CREATE TABLE TimeTracking (
     State INT CHECK (state IN (1, 2)),
     FOREIGN KEY (Peer) REFERENCES Peers(Nickname)
 );
+-- DROP PROCEDURE export_csv_data;
 -- Create procedure to import in csv file 
 CREATE OR REPLACE PROCEDURE import_csv_data(
         IN table_name VARCHAR,
@@ -110,3 +111,9 @@ CALL import_csv_data(
     '/home/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/Peers.csv',
     ','
 );
+CALL import_csv_data(
+    'checks',
+    '/home/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/Checks.csv',
+    ','
+);
+DROP OWNED BY janiecee;
