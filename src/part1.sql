@@ -68,15 +68,20 @@ CREATE TABLE TimeTracking (
     State INT CHECK (state IN (1, 2)),
     FOREIGN KEY (Peer) REFERENCES Peers(Nickname)
 );
--- DROP PROCEDURE export_csv_data;
+-- DROP PROCEDURE import_csv_data;
 -- Create procedure to import in csv file 
 CREATE OR REPLACE PROCEDURE import_csv_data(
         IN table_name VARCHAR,
         IN file_path VARCHAR,
         IN delimiter VARCHAR
-    ) LANGUAGE plpgsql AS $$ BEGIN EXECUTE 'CREATE TEMPORARY TABLE tmp_table AS
+    ) LANGUAGE plpgsql AS $$ BEGIN --
+    -- Create temproary table
+    EXECUTE format(
+        'CREATE TEMPORARY TABLE tmp_table AS
 SELECT *
-FROM peers';
+FROM %I',
+        table_name
+    );
 -- Load data from CSV to CACHE TABLE
 EXECUTE format(
     'COPY tmp_table FROM %L WITH (FORMAT CSV, DELIMITER %L)',
@@ -109,6 +114,11 @@ $$;
 CALL import_csv_data(
     'peers',
     '/home/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/Peers.csv',
+    ','
+);
+CALL import_csv_data(
+    'tasks',
+    '/home/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/Tasks.csv',
     ','
 );
 CALL import_csv_data(

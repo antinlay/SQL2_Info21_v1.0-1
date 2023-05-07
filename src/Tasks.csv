@@ -1,0 +1,6 @@
+DO1_Linux,null,300
+DO2_LinuxNetwork,DO1_Linux,350
+DO3_LinuxMonitoring_v1.0,DO2_LinuxNetwork,350
+DO4_LinuxMonitoring_v2.0,DO3_LinuxMonitoring_v1.0,501
+DO5_SimpleDocker,DO4_LinuxMonitoring_v2.0,300
+DO6_CICD,DO5_SimpleDocker,300
