@@ -1,72 +1,74 @@
 -- GRANT ALL ON DATABASE info21 TO janiecee;
 -- ALTER DATABASE info21 OWNER TO janiecee;
-CREATE TABLE Peers (
-    Nickname VARCHAR PRIMARY KEY,
-    Birthday DATE NOT NULL
+CREATE TABLE peers (
+    nickname VARCHAR PRIMARY KEY,
+    birthday DATE NOT NULL
 );
-CREATE TABLE Tasks (
-    Title VARCHAR PRIMARY KEY,
-    ParentTask VARCHAR,
-    MaxXP INT NOT NULL
+CREATE TABLE tasks (
+    title VARCHAR PRIMARY KEY,
+    parent_task VARCHAR,
+    max_xp INT NOT NULL
 );
 CREATE TYPE check_status AS ENUM ('Start', 'Success', 'Failure');
-CREATE TABLE Checks (
+CREATE TABLE checks (
     id SERIAL PRIMARY KEY,
-    Peer VARCHAR NOT NULL,
-    Task VARCHAR NOT NULL,
-    Date DATE NOT NULL,
-    FOREIGN KEY (Peer) REFERENCES Peers(Nickname),
-    FOREIGN KEY (Task) REFERENCES Tasks(Title)
+    peer VARCHAR NOT NULL,
+    task VARCHAR NOT NULL,
+    date_check DATE NOT NULL,
+    CONSTRAINT fk_checks_peer FOREIGN KEY (peer) REFERENCES peers(nickname),
+    CONSTRAINT fk_checks_task FOREIGN KEY (task) REFERENCES tasks(title)
 );
-CREATE TABLE P2P (
+CREATE TABLE p2p (
     id SERIAL PRIMARY KEY,
-    CheckNum BIGINT NOT NULL,
-    CheckingPeer VARCHAR NOT NULL,
-    State check_status,
-    Time TIMESTAMP,
-    FOREIGN KEY (CheckNum) REFERENCES Checks(id),
-    UNIQUE (CheckNum, CheckingPeer)
+    check_num BIGINT NOT NULL,
+    checking_peer VARCHAR NOT NULL,
+    check_state check_status,
+    time_check TIME NOT NULL,
+    CONSTRAINT fk_p2p_check_num FOREIGN KEY (check_num) REFERENCES checks(id),
+    CONSTRAINT uk_p2p_check UNIQUE (check_num, checked_peer, check_state)
 );
-CREATE TABLE Verter (
+CREATE TABLE verter (
     id SERIAL PRIMARY KEY,
-    CheckNum BIGINT NOT NULL,
-    State check_status NOT NULL,
-    time TIMESTAMP NOT NULL,
-    FOREIGN KEY (CheckNum) REFERENCES Checks(id)
+    check_num INT NOT NULL,
+    check_state check_status NOT NULL,
+    time_check TIME NOT NULL,
+    CONSTRAINT fk_verter_check_num FOREIGN KEY (check_num) REFERENCES checks(id)
 );
-CREATE TABLE TransferredPoints (
+CREATE TABLE transfered_points (
     id SERIAL PRIMARY KEY,
-    CheckingPeer VARCHAR NOT NULL,
-    CheckedPeer VARCHAR NOT NULL,
-    PointsAmount INT NOT NULL
+    checking_peer VARCHAR NOT NULL,
+    checked_peer VARCHAR NOT NULL,
+    points_amount INT NOT NULL
 );
-CREATE TABLE Friends (
+CREATE TABLE friend (
     id SERIAL PRIMARY KEY,
-    Peer1 VARCHAR NOT NULL,
-    Peer2 VARCHAR NOT NULL,
-    FOREIGN KEY (Peer1) REFERENCES Peers(Nickname),
-    FOREIGN KEY (Peer2) REFERENCES Peers(Nickname)
+    peer1 VARCHAR NOT NULL,
+    peer2 VARCHAR NOT NULL,
+    CONSTRAINT fk_friend_peer1 FOREIGN KEY (peer1) REFERENCES peers(nickname),
+    CONSTRAINT fk_friend_peer2 FOREIGN KEY (peer2) REFERENCES peers(nickname),
+    CONSTRAINT uk_peer1_peer2 UNIQUE (peer1, peer2),
+    CONSTRAINT chk_peer1_peer2 CHECK (peer1 < peer2)
 );
-CREATE TABLE Recommendations (
+CREATE TABLE recomendations (
     id SERIAL PRIMARY KEY,
-    Peer VARCHAR NOT NULL,
-    RecommendedPeer VARCHAR NOT NULL,
-    FOREIGN KEY (Peer) REFERENCES Peers(Nickname),
-    FOREIGN KEY (RecommendedPeer) REFERENCES Peers(Nickname)
+    peer VARCHAR NOT NULL,
+    recomended_peer VARCHAR NOT NULL,
+    CONSTRAINT fk_recomendations_peer FOREIGN KEY (peer) REFERENCES peers(nickname),
+    CONSTRAINT fk_recomendations_recomended_peer FOREIGN KEY (recomended_peer) REFERENCES peers(nickname)
 );
-CREATE TABLE XP (
+CREATE TABLE xp (
     id SERIAL PRIMARY KEY,
-    CheckNum BIGINT NOT NULL,
-    XPAmount INT NOT NULL,
-    FOREIGN KEY (CheckNum) REFERENCES Checks(id)
+    check_num BIGINT NOT NULL,
+    xp_amount INT NOT NULL,
+    CONSTRAINT fk_xp_check_num FOREIGN KEY (check_num) REFERENCES checks(id)
 );
-CREATE TABLE TimeTracking (
+CREATE TABLE time_tracking (
     id SERIAL PRIMARY KEY,
-    Peer VARCHAR,
-    Date DATE NOT NULL,
-    Time TIME NOT NULL,
-    State INT CHECK (state IN (1, 2)),
-    FOREIGN KEY (Peer) REFERENCES Peers(Nickname)
+    peer VARCHAR,
+    date_state DATE NOT NULL,
+    time_state TIME NOT NULL,
+    peer_state INT CHECK (peer_state IN (1, 2)),
+    CONSTRAINT fk_time_tracking_peer FOREIGN KEY (peer) REFERENCES peers(nickname)
 );
 -- DROP PROCEDURE import_csv_data;
 -- Create procedure to import in csv file 
@@ -76,25 +78,31 @@ CREATE OR REPLACE PROCEDURE import_csv_data(
         IN delimiter VARCHAR
     ) LANGUAGE plpgsql AS $$ BEGIN --
     -- Create temproary table
+    --     EXECUTE format(
+    --         'CREATE TEMPORARY TABLE tmp_table AS
+    -- SELECT *
+    -- FROM %I',
+    --         table_name
+    --     );
+    -- Load data from CSV to CACHE TABLE
+    -- EXECUTE format(
+    --     'COPY tmp_table FROM %L WITH (FORMAT CSV, DELIMITER %L)',
+    --     file_path,
+    --     delimiter
+    -- );
+    -- Insert data from CACHE TABLE to table_name
+    -- EXECUTE format(
+    --     'INSERT INTO %I SELECT * FROM tmp_table',
+    --     table_name
+    -- );
+    -- Drop CACHE TABLE
+    -- EXECUTE 'TRUNCATE TABLE tmp_table';
     EXECUTE format(
-        'CREATE TEMPORARY TABLE tmp_table AS
-SELECT *
-FROM %I',
-        table_name
+        'COPY %I FROM %L DELIMITER %L CSV',
+        table_name,
+        file_path,
+        ','
     );
--- Load data from CSV to CACHE TABLE
-EXECUTE format(
-    'COPY tmp_table FROM %L WITH (FORMAT CSV, DELIMITER %L)',
-    file_path,
-    delimiter
-);
--- Insert data from CACHE TABLE to table_name
-EXECUTE format(
-    'INSERT INTO %I SELECT * FROM tmp_table',
-    table_name
-);
--- Drop CACHE TABLE
-EXECUTE 'TRUNCATE TABLE tmp_table';
 END;
 $$;
 -- Create procedure to export from csv file 
@@ -119,6 +127,11 @@ CALL import_csv_data(
 CALL import_csv_data(
     'tasks',
     '/home/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/Tasks.csv',
+    ','
+);
+CALL import_csv_data(
+    'p2p',
+    '/home/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/P2P.csv',
     ','
 );
 CALL import_csv_data(
