@@ -25,7 +25,7 @@ CREATE TABLE p2p (
     check_state check_status,
     time_check TIME NOT NULL,
     CONSTRAINT fk_p2p_check_num FOREIGN KEY (check_num) REFERENCES checks(id),
-    CONSTRAINT uk_p2p_check UNIQUE (check_num, checked_peer, check_state)
+    CONSTRAINT uk_p2p_check UNIQUE (check_num, checked_peer, check_state) -- WHERE check_state IN ('Start');
 );
 CREATE TABLE verter (
     id SERIAL PRIMARY KEY,
@@ -33,6 +33,12 @@ CREATE TABLE verter (
     check_state check_status NOT NULL,
     time_check TIME NOT NULL,
     CONSTRAINT fk_verter_check_num FOREIGN KEY (check_num) REFERENCES checks(id)
+    WHERE EXISTS (
+            SELECT 1
+            FROM p2p
+            WHERE p2p.check_num = checks.id
+                AND p2p.check_state = 'Success'
+        );
 );
 CREATE TABLE transfered_points (
     id SERIAL PRIMARY KEY,
@@ -77,32 +83,12 @@ CREATE OR REPLACE PROCEDURE import_csv_data(
         IN file_path VARCHAR,
         IN delimiter VARCHAR
     ) LANGUAGE plpgsql AS $$ BEGIN --
-    -- Create temproary table
-    --     EXECUTE format(
-    --         'CREATE TEMPORARY TABLE tmp_table AS
-    -- SELECT *
-    -- FROM %I',
-    --         table_name
-    --     );
-    -- Load data from CSV to CACHE TABLE
-    -- EXECUTE format(
-    --     'COPY tmp_table FROM %L WITH (FORMAT CSV, DELIMITER %L)',
-    --     file_path,
-    --     delimiter
-    -- );
-    -- Insert data from CACHE TABLE to table_name
-    -- EXECUTE format(
-    --     'INSERT INTO %I SELECT * FROM tmp_table',
-    --     table_name
-    -- );
-    -- Drop CACHE TABLE
-    -- EXECUTE 'TRUNCATE TABLE tmp_table';
     EXECUTE format(
-        'COPY %I FROM %L DELIMITER %L CSV',
-        table_name,
-        file_path,
-        ','
-    );
+    'COPY %I FROM %L DELIMITER %L CSV',
+    table_name,
+    file_path,
+    delimiter
+);
 END;
 $$;
 -- Create procedure to export from csv file 
