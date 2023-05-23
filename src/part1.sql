@@ -151,4 +151,19 @@ CALL import_csv_data(
     '/home/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/Friends.csv',
     ','
 );
+CALL import_csv_data(
+    'recomendations',
+    '/home/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/Recomendations.csv',
+    ','
+);
+CALL import_csv_data(
+    'xp',
+    '/home/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/Xp.csv',
+    ','
+);
+CALL import_csv_data(
+    'time_tracking',
+    '/home/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/Time_tracking.csv',
+    ','
+);
 DROP OWNED BY janiecee;
