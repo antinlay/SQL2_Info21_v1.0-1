@@ -72,9 +72,10 @@ ALTER TABLE friend
 ADD CONSTRAINT fk_friend_peer1 FOREIGN KEY (peer1) REFERENCES peers(nickname);
 ALTER TABLE friend
 ADD CONSTRAINT fk_friend_peer2 FOREIGN KEY (peer2) REFERENCES peers(nickname);
-ALTER TABLE friend
-ADD CONSTRAINT uk_peer1_peer2 UNIQUE (peer1, peer2);
 -- ALTER TABLE friend
+-- ADD CONSTRAINT uk_peer1_peer2 UNIQUE (peer1, peer2);
+DROP TABLE friend CASCADE;
+cascad -- ALTER TABLE friend
 -- ADD CONSTRAINT chk_peer1_peer2 CHECK (peer1 < peer2);
 ALTER TABLE recomendations
 ADD CONSTRAINT fk_recomendations_peer FOREIGN KEY (peer) REFERENCES peers(nickname);
@@ -113,57 +114,52 @@ $$;
 -- Run from SU POSTGRES (sudo su postgres; psql; GRANT pg_write_server_files TO janiecee; GRANT pg_read_server_files TO janiecee;)
 CALL import_csv_data(
     'peers',
-    '/home/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/Peers.csv',
+    '/Users/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/Peers.csv',
     ','
 );
 CALL import_csv_data(
     'tasks',
-    '/home/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/Tasks.csv',
+    '/Users/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/Tasks.csv',
     ','
 );
 CALL import_csv_data(
     'checks',
-    '/home/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/Checks.csv',
+    '/Users/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/Checks.csv',
     ','
 );
 CALL import_csv_data(
     'p2p',
-    '/home/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/P2P.csv',
-    ','
-);
-CALL import_csv_data(
-    'p2p',
-    '/home/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/P2P.csv',
+    '/Users/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/P2P.csv',
     ','
 );
 CALL import_csv_data(
     'verter',
-    '/home/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/Verter.csv',
+    '/Users/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/Verter.csv',
     ','
 );
 CALL import_csv_data(
     'transfered_points',
-    '/home/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/Transfered_points.csv',
+    '/Users/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/Transfered_points.csv',
     ','
 );
 CALL import_csv_data(
     'friend',
-    '/home/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/Friends.csv',
+    '/Users/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/Friends.csv',
     ','
 );
 CALL import_csv_data(
     'recomendations',
-    '/home/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/Recomendations.csv',
+    '/Users/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/Recomendations.csv',
     ','
 );
 CALL import_csv_data(
     'xp',
-    '/home/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/Xp.csv',
+    '/Users/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/Xp.csv',
     ','
 );
 CALL import_csv_data(
     'time_tracking',
-    '/home/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/Time_tracking.csv',
+    '/Users/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/Time_tracking.csv',
     ','
 );
 DROP OWNED BY janiecee;
