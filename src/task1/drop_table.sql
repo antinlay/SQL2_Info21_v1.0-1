@@ -1,0 +1,13 @@
+-- select * from checks
+-- select * from p2p
+
+-- DROP table p2p CASCADE;
+-- DROP table checks CASCADE;
+-- DROP table friends CASCADE;
+-- DROP table peers CASCADE;
+-- DROP table recommendations CASCADE;
+-- DROP table tasks CASCADE;
+-- DROP table timetracking CASCADE;
+-- DROP table transferredpoints CASCADE;
+-- DROP table verter CASCADE;
+-- DROP table xp CASCADE;
