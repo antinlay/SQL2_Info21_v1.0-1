@@ -1,5 +1,5 @@
--- GRANT ALL ON DATABASE info21 TO janiecee;
--- ALTER DATABASE info21 OWNER TO janiecee;
+-- GRANT ALL ON DATABASE janiecee TO janiecee;
+-- ALTER DATABASE janiecee OWNER TO janiecee;
 CREATE TABLE peers (
     nickname VARCHAR PRIMARY KEY,
     birthday DATE NOT NULL
@@ -58,44 +58,34 @@ CREATE TABLE time_tracking (
     peer_state INT CHECK (peer_state IN (1, 2))
 );
 ALTER TABLE checks
-ADD CONSTRAINT fk_checks_peer FOREIGN KEY (peer) REFERENCES peers(nickname);
-ALTER TABLE checks
-ADD CONSTRAINT fk_checks_task FOREIGN KEY (task) REFERENCES tasks(title);
+ADD CONSTRAINT fk_checks_peer FOREIGN KEY (peer) REFERENCES peers(nickname),
+    ADD CONSTRAINT fk_checks_task FOREIGN KEY (task) REFERENCES tasks(title);
 ALTER TABLE time_tracking
 ADD CONSTRAINT fk_time_tracking_peer FOREIGN KEY (peer) REFERENCES peers(nickname);
 ALTER TABLE p2p
-ADD CONSTRAINT fk_p2p_check_num FOREIGN KEY (check_num) REFERENCES checks(id);
-ALTER TABLE p2p
-ADD CONSTRAINT uk_p2p_check UNIQUE (check_num, checking_peer, check_state);
+ADD CONSTRAINT fk_p2p_check_num FOREIGN KEY (check_num) REFERENCES checks(id),
+    ADD CONSTRAINT uk_p2p_check UNIQUE (check_num, checking_peer, check_state);
 -- WHERE check_state IN ('Start');
 ALTER TABLE friend
-ADD CONSTRAINT fk_friend_peer1 FOREIGN KEY (peer1) REFERENCES peers(nickname);
-ALTER TABLE friend
-ADD CONSTRAINT fk_friend_peer2 FOREIGN KEY (peer2) REFERENCES peers(nickname);
--- ALTER TABLE friend
--- ADD CONSTRAINT uk_peer1_peer2 UNIQUE (peer1, peer2);
-DROP TABLE friend CASCADE;
-cascad -- ALTER TABLE friend
--- ADD CONSTRAINT chk_peer1_peer2 CHECK (peer1 < peer2);
+ADD CONSTRAINT fk_friend_peer1 FOREIGN KEY (peer1) REFERENCES peers(nickname),
+    ADD CONSTRAINT fk_friend_peer2 FOREIGN KEY (peer2) REFERENCES peers(nickname),
+    ADD CONSTRAINT uk_peer1_peer2 CHECK (peer1 <> peer2);
 ALTER TABLE recomendations
-ADD CONSTRAINT fk_recomendations_peer FOREIGN KEY (peer) REFERENCES peers(nickname);
-ALTER TABLE recomendations
-ADD CONSTRAINT fk_recomendations_recomended_peer FOREIGN KEY (recomended_peer) REFERENCES peers(nickname);
+ADD CONSTRAINT fk_recomendations_peer FOREIGN KEY (peer) REFERENCES peers(nickname),
+    ADD CONSTRAINT fk_recomendations_recomended_peer FOREIGN KEY (recomended_peer) REFERENCES peers(nickname);
 ALTER TABLE xp
 ADD CONSTRAINT fk_xp_check_num FOREIGN KEY (check_num) REFERENCES checks(id);
--- DROP PROCEDURE import_csv_data;
 -- Create procedure to import in csv file 
 CREATE OR REPLACE PROCEDURE import_csv_data(
         IN table_name VARCHAR,
         IN file_path VARCHAR,
         IN delimiter VARCHAR
-    ) LANGUAGE plpgsql AS $$ BEGIN --
-    EXECUTE format(
-    'COPY %I FROM %L DELIMITER %L CSV',
-    table_name,
-    file_path,
-    delimiter
-);
+    ) LANGUAGE plpgsql AS $$ BEGIN EXECUTE format(
+        'COPY %I FROM %L DELIMITER %L CSV',
+        table_name,
+        file_path,
+        delimiter
+    );
 END;
 $$;
 -- Create procedure to export from csv file 
@@ -111,7 +101,7 @@ CREATE OR REPLACE PROCEDURE export_csv_data(
     );
 END;
 $$;
--- Run from SU POSTGRES (sudo su postgres; psql; GRANT pg_write_server_files TO janiecee; GRANT pg_read_server_files TO janiecee;)
+-- Run from SU POSTGRES (sudo su postgres; psql; GRANT pg_write_server_files TO postgres; GRANT pg_read_server_files TO postgres;)
 CALL import_csv_data(
     'peers',
     '/Users/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/Peers.csv',
@@ -162,4 +152,16 @@ CALL import_csv_data(
     '/Users/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/Time_tracking.csv',
     ','
 );
-DROP OWNED BY janiecee;
+-- DROP TYPE check_status;
+-- DROP TABLE checks,
+-- friend,
+-- p2p,
+-- peers,
+-- recomendations,
+-- tasks,
+-- time_tracking,
+-- transfered_points,
+-- verter,
+-- xp CASCADE;
+-- DROP PROCEDURE export_csv_data,
+-- import_csv_data CASCADE;
