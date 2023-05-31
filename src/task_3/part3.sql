@@ -1,4 +1,4 @@
--- Write a function that returns the TransferredPoints table in a more human-readable form
+-- 1) Write a function that returns the TransferredPoints table in a more human-readable form
 CREATE OR REPLACE FUNCTION tp_human_view () RETURNS TABLE (
         Peer1 VARCHAR,
         Peer2 VARCHAR,
@@ -19,3 +19,8 @@ $$ LANGUAGE plpgsql;
 SELECT *
 FROM tp_human_view();
 -- DROP FUNCTION tp_human_view;
+-- 2) Write a function that returns a table of the following form: user name, name of the checked task, number of XP received
+CREATE OR REPLACE FUNCTION checks_success () RETURN TABLE (Peer VARCHAR, Task VARCHAR, Xp INT) AS $$ BEGIN RETURN QUERY
+SELECT *
+FROM
+END;
