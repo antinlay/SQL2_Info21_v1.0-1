@@ -20,7 +20,37 @@ SELECT *
 FROM tp_human_view();
 -- DROP FUNCTION tp_human_view;
 -- 2) Write a function that returns a table of the following form: user name, name of the checked task, number of XP received
-CREATE OR REPLACE FUNCTION checks_success () RETURN TABLE (Peer VARCHAR, Task VARCHAR, Xp INT) AS $$ BEGIN RETURN QUERY
-SELECT *
-FROM
+CREATE OR REPLACE FUNCTION checks_success () RETURNS TABLE (Peer VARCHAR, Task VARCHAR, Xp INT) AS $$ BEGIN RETURN QUERY
+SELECT checks.peer AS Peer,
+    checks.task AS Task,
+    xp.xp_amount AS Xp
+FROM checks
+    JOIN p2p ON p2p.check_num = checks.id
+    AND p2p.check_state = 'Success'
+    JOIN verter ON verter.check_num = checks.id
+    AND verter.check_state = 'Success'
+    JOIN xp ON xp.check_num = checks.id
+ORDER BY Peer;
 END;
+$$ LANGUAGE plpgsql;
+SELECT *
+FROM checks_success();
+-- 3) Write a function that finds the peers who have not left campus for the whole day
+CREATE OR REPLACE FUNCTION peer_not_left (target_date date) RETURNS TABLE (Peer VARCHAR) AS $$ BEGIN RETURN QUERY
+SELECT tt.peer AS Peer
+FROM time_tracking AS tt
+WHERE peer_state = 1
+    AND date_state = target_date
+EXCEPT
+SELECT tt.peer AS Peer
+FROM time_tracking AS tt
+WHERE peer_state = 2
+    AND date_state = target_date;
+END;
+$$ LANGUAGE plpgsql;
+SELECT *
+FROM peer_not_left('2023-06-01');
+-- INSERT INTO time_tracking
+-- VALUES (7, 'shoredim', '2023-06-01', '09:00:00', 1);
+-- INSERT INTO time_tracking
+-- VALUES (8, 'shoredim', '2023-06-02', '00:01:00', 2);
