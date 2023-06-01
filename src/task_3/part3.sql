@@ -54,3 +54,13 @@ FROM peer_not_left('2023-06-01');
 -- VALUES (7, 'shoredim', '2023-06-01', '09:00:00', 1);
 -- INSERT INTO time_tracking
 -- VALUES (8, 'shoredim', '2023-06-02', '00:01:00', 2);
+-- 4) Calculate the change in the number of peer points of each peer using the TransferredPoints table
+CREATE OR REPLACE PROCEDURE prp_change (IN cursor REFCURSOR = 'result_4') AS $$ BEGIN OPEN result_4 FOR
+SELECT nickname,
+    SUM(COALESCE(transfered_points.points_amount, 0))
+FROM peers
+    LEFT JOIN transfered_points ON transfered_points.checking_peer = peers.nickname
+GROUP BY peers.nickname
+ORDER BY nickname
+END;
+$$ LANGUAGE plpgsql;
