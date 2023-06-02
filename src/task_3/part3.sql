@@ -133,9 +133,10 @@ CREATE OR REPLACE PROCEDURE freq_checked_task (IN cursor REFCURSOR = 'result_p3_
 SELECT TO_CHAR(checks_count.date_check, 'DD.MM.YYYY') AS "Day",
     checks_count.task AS "Task"
 FROM checks_count
-    LEFT JOIN max_of_count ON max_of_count.date_check = checks_count.date_check
+    JOIN max_of_count ON max_of_count.date_check = checks_count.date_check
 WHERE max_of_count.max = checks_count.amount;
 END;
 $$ LANGUAGE plpgsql;
-INSERT INTO p2p
-VALUES (10, 6, 'starkill', 'Success', '00:50:00');
+CALL freq_checked_task();
+FETCH ALL
+FROM "result_p3_t6";
