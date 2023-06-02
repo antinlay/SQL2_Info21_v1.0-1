@@ -57,7 +57,7 @@ FROM peer_not_left('2023-06-01');
 -- 4) Calculate the change in the number of peer points of each peer using the transfered_points table
 CREATE OR REPLACE PROCEDURE prp_change (IN cursor REFCURSOR = 'result_p3_t4') AS $$ BEGIN OPEN cursor FOR WITH Peer1Trans AS (
         SELECT nickname,
-            SUM(COALESCE(transfered_points.points_amount, 0)) AS total
+            SUM(COALESCE(transfered_points.points_amount, 0)) AS sum_points
         FROM peers
             LEFT JOIN transfered_points ON transfered_points.checking_peer = peers.nickname
         GROUP BY peers.nickname
@@ -65,14 +65,14 @@ CREATE OR REPLACE PROCEDURE prp_change (IN cursor REFCURSOR = 'result_p3_t4') AS
     ),
     Peer2Trans AS (
         SELECT nickname,
-            SUM(COALESCE(transfered_points.points_amount, 0)) AS total
+            SUM(COALESCE(transfered_points.points_amount, 0)) AS sum_points
         FROM peers
             LEFT JOIN transfered_points ON transfered_points.checked_peer = peers.nickname
         GROUP BY peers.nickname
         ORDER BY nickname
     )
 SELECT Peer2Trans.nickname AS Peer,
-    Peer2Trans.total - Peer1Trans.total AS ChangePoints
+    Peer2Trans.sum_points - Peer1Trans.sum_points AS ChangePoints
 FROM Peer2Trans
     JOIN Peer1Trans ON Peer1Trans.nickname = Peer2Trans.nickname
 ORDER BY ChangePoints DESC;
@@ -83,3 +83,34 @@ $$ LANGUAGE plpgsql;
 CALL prp_change();
 FETCH ALL
 FROM "result_p3_t4";
+-- 5) Calculate the change in the number of peer points of each peer using the table returned by the first function from Part 3
+CREATE OR REPLACE PROCEDURE prp_change_tphuman (IN cursor REFCURSOR = 'result_p3_t5') AS $$ BEGIN OPEN cursor FOR WITH tp_human_view AS (
+        SELECT *
+        FROM tp_human_view()
+    ),
+    Peer1Trans AS (
+        SELECT nickname,
+            SUM(COALESCE(tp_human_view.PointsAmount, 0)) AS sum_points
+        FROM peers
+            LEFT JOIN tp_human_view ON tp_human_view.Peer1 = peers.nickname
+        GROUP BY peers.nickname
+        ORDER BY nickname
+    ),
+    Peer2Trans AS (
+        SELECT nickname,
+            SUM(COALESCE(tp_human_view.PointsAmount, 0)) AS sum_points
+        FROM peers
+            LEFT JOIN tp_human_view ON tp_human_view.Peer2 = peers.nickname
+        GROUP BY peers.nickname
+        ORDER BY nickname
+    )
+SELECT Peer2Trans.nickname AS Peer,
+    Peer2Trans.sum_points - Peer1Trans.sum_points AS ChangePoints
+FROM Peer2Trans
+    JOIN Peer1Trans ON Peer1Trans.nickname = Peer2Trans.nickname
+ORDER BY ChangePoints DESC;
+END;
+$$ LANGUAGE plpgsql;
+CALL prp_change_tphuman();
+FETCH ALL
+FROM "result_p3_t5";
