@@ -181,3 +181,4 @@ END;
 $$ LANGUAGE plpgsql;
 CALL peers_completed_block('result_p3_t7', 'DO');
 FETCH ALL IN result_p3_t7;
+-- 8) Determine which peer each student should go to for a check.

@@ -109,7 +109,7 @@ CALL import_csv_data(
 );
 CALL import_csv_data(
     'tasks',
-    '/Users/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/Tasks.csv',
+    '/Users/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/task_1/Tasks.csv',
     ','
 );
 CALL import_csv_data(
