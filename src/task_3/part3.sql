@@ -130,8 +130,8 @@ CREATE OR REPLACE PROCEDURE freq_checked_task (IN cursor REFCURSOR = 'result_p3_
         FROM checks_count
         GROUP BY checks_count.date_check
     )
-SELECT TO_CHAR(checks_count.date_check, 'DD.MM.YYYY') AS "Day",
-    checks_count.task AS "Task"
+SELECT TO_CHAR(checks_count.date_check, 'DD.MM.YYYY') AS Day,
+    checks_count.task AS Task
 FROM checks_count
     JOIN max_of_count ON max_of_count.date_check = checks_count.date_check
 WHERE max_of_count.max = checks_count.amount;
@@ -140,3 +140,44 @@ $$ LANGUAGE plpgsql;
 CALL freq_checked_task();
 FETCH ALL
 FROM "result_p3_t6";
+-- 7) Find all peers who have completed the whole given block of tasks and the completion date of the last task
+CREATE OR REPLACE PROCEDURE peers_completed_block (IN cursor REFCURSOR, block_name VARCHAR) AS $$
+DECLARE task_count INT := (
+        SELECT COUNT(*)
+        FROM tasks
+        WHERE tasks.title ~ ('^' || block_name || '[0-9]')
+    );
+BEGIN OPEN cursor FOR WITH peer_complete_tasks AS (
+    /*  */
+    SELECT DISTINCT ON(checks.peer, checks.task) checks.peer,
+        checks.task,
+        checks.date_check
+    FROM checks
+        JOIN p2p ON checks.id = p2p.check_num
+        JOIN verter ON checks.id = verter.check_num
+    WHERE checks.task ~ ('^' || 'DO' || '[0-9]')
+        AND (
+            p2p.check_state = 'Success'
+            AND verter.check_state = 'Success'
+        )
+    ORDER BY checks.peer,
+        checks.task,
+        checks.date_check DESC
+),
+/*  */
+uniq_count_tasks AS (
+    SELECT peer,
+        COUNT(*) AS amount,
+        MAX(date_check) AS day
+    FROM peer_complete_tasks
+    GROUP BY peer
+)
+SELECT ct.peer,
+    TO_CHAR(ct.day, 'dd.mm.yyyy') AS day
+FROM uniq_count_tasks ct
+WHERE amount = task_count
+ORDER BY day;
+END;
+$$ LANGUAGE plpgsql;
+CALL peers_completed_block('result_p3_t7', 'DO');
+FETCH ALL IN result_p3_t7;
