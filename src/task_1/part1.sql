@@ -104,7 +104,7 @@ $$;
 -- Run from SU POSTGRES (sudo su postgres; psql; GRANT pg_write_server_files TO postgres; GRANT pg_read_server_files TO postgres;)
 CALL import_csv_data(
     'peers',
-    '/Users/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/Peers.csv',
+    '/Users/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/task_1/Peers.csv',
     ','
 );
 CALL import_csv_data(
@@ -114,54 +114,42 @@ CALL import_csv_data(
 );
 CALL import_csv_data(
     'checks',
-    '/Users/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/Checks.csv',
+    '/Users/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/task_1/Checks.csv',
     ','
 );
 CALL import_csv_data(
     'p2p',
-    '/Users/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/P2P.csv',
+    '/Users/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/task_1/P2P.csv',
     ','
 );
 CALL import_csv_data(
     'verter',
-    '/Users/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/Verter.csv',
+    '/Users/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/task_1/Verter.csv',
     ','
 );
 CALL import_csv_data(
     'transfered_points',
-    '/Users/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/Transfered_points.csv',
+    '/Users/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/task_1/Transfered_points.csv',
     ','
 );
 CALL import_csv_data(
     'friend',
-    '/Users/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/Friends.csv',
+    '/Users/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/task_1/Friends.csv',
     ','
 );
 CALL import_csv_data(
     'recomendations',
-    '/Users/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/Recomendations.csv',
+    '/Users/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/task_1/Recomendations.csv',
     ','
 );
 CALL import_csv_data(
     'xp',
-    '/Users/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/Xp.csv',
+    '/Users/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/task_1/Xp.csv',
     ','
 );
 CALL import_csv_data(
     'time_tracking',
-    '/Users/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/Time_tracking.csv',
+    '/Users/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/task_1/Time_tracking.csv',
     ','
 );
--- DROP TYPE check_status;
--- DROP TABLE checks,
--- friend,
--- p2p,
--- peers,
--- recomendations,
--- tasks,
--- time_tracking,
--- transfered_points,
--- verter,
--- xp CASCADE;
--- DROP PROCEDURE export_csv_data,
--- import_csv_data CASCADE;
+-- DROP OWNED BY janiecee;
