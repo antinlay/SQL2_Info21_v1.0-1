@@ -75,6 +75,7 @@ ADD CONSTRAINT fk_recomendations_peer FOREIGN KEY (peer) REFERENCES peers(nickna
     ADD CONSTRAINT fk_recomendations_recomended_peer FOREIGN KEY (recomended_peer) REFERENCES peers(nickname);
 ALTER TABLE xp
 ADD CONSTRAINT fk_xp_check_num FOREIGN KEY (check_num) REFERENCES checks(id);
+-- Добавить проверку по фэйлу p2p и verter проверке чтобы не происходило начисление XP за неуспешный проект
 -- Create procedure to import in csv file 
 CREATE OR REPLACE PROCEDURE import_csv_data(
         IN table_name VARCHAR,

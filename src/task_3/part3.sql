@@ -148,14 +148,13 @@ DECLARE task_count INT := (
         WHERE tasks.title ~ ('^' || block_name || '[0-9]')
     );
 BEGIN OPEN cursor FOR WITH peer_complete_tasks AS (
-    /*  */
     SELECT DISTINCT ON(checks.peer, checks.task) checks.peer,
         checks.task,
         checks.date_check
     FROM checks
         JOIN p2p ON checks.id = p2p.check_num
         JOIN verter ON checks.id = verter.check_num
-    WHERE checks.task ~ ('^' || 'DO' || '[0-9]')
+    WHERE checks.task ~ ('^' || block_name || '[0-9]')
         AND (
             p2p.check_state = 'Success'
             AND verter.check_state = 'Success'
@@ -164,7 +163,6 @@ BEGIN OPEN cursor FOR WITH peer_complete_tasks AS (
         checks.task,
         checks.date_check DESC
 ),
-/*  */
 uniq_count_tasks AS (
     SELECT peer,
         COUNT(*) AS amount,
@@ -182,3 +180,71 @@ $$ LANGUAGE plpgsql;
 CALL peers_completed_block('result_p3_t7', 'DO');
 FETCH ALL IN result_p3_t7;
 -- 8) Determine which peer each student should go to for a check.
+CREATE OR REPLACE PROCEDURE rec_checked_peer (IN cursor REFCURSOR) AS $$ BEGIN OPEN cursor FOR WITH recommended_counts AS (
+        SELECT r.recomended_peer,
+            COUNT(f.peer1) AS friend_count
+        FROM recomendations r
+            JOIN friend f ON r.recomended_peer = f.peer2
+        GROUP BY r.recomended_peer
+    ),
+    ranked_recommended AS (
+        SELECT r.peer,
+            rc.recomended_peer,
+            rc.friend_count,
+            ROW_NUMBER() OVER (
+                PARTITION BY r.peer
+                ORDER BY rc.friend_count DESC
+            ) AS rank
+        FROM recomendations r
+            JOIN recommended_counts rc ON r.recomended_peer = rc.recomended_peer
+    )
+SELECT p.nickname AS Peer,
+    rr.recomended_peer AS RecommendedPeer
+FROM peers p
+    JOIN ranked_recommended rr ON p.nickname = rr.peer
+WHERE rr.rank = 1
+ORDER BY p.nickname;
+END;
+$$ LANGUAGE plpgsql;
+CALL rec_checked_peer('result_p3_t8');
+FETCH ALL IN result_p3_t8;
+-- 9) Determine the percentage of peers who:
+CREATE OR REPLACE PROCEDURE percent_of_peers (IN cursor REFCURSOR) AS $$ BEGIN OPEN cursor FOR WITH all_peers_blocks AS (
+        SELECT p.nickname,
+            c.task
+        FROM peers p
+            LEFT JOIN checks c ON p.nickname = c.peer
+    ),
+    peers_b2 AS (
+        SELECT DISTINCT ON (nickname) nickname
+        FROM all_peers_blocks a
+        WHERE a.task ~ ('^' || 'DO' || '[0-9]')
+    ),
+    peers_b1 AS (
+        SELECT DISTINCT ON (nickname) nickname
+        FROM all_peers_blocks a
+        WHERE a.task ~ ('^' || 'C' || '[0-9]')
+    ),
+    only_b2 AS(
+        SELECT b2.nickname
+        FROM peers_b2 b2
+        EXCEPT
+        SELECT b1.nickname
+        FROM peers_b1 b1
+    ),
+    only_b1 AS(
+        SELECT b1.nickname
+        FROM peers_b1 b1
+        EXCEPT
+        SELECT b2.nickname
+        FROM peers_b2 b2
+    ),
+    both_blocks AS (
+        SELECT b1.nickname
+        FROM peers_b1 b1
+            JOIN peers_b2 b2 ON b2.nickname = b1.nickname
+    )
+SELECT COUNT(nickname) AS DidntStartAnyBlock
+FROM all_peers_blocks
+END;
+$$ LANGUAGE plpgsql;
