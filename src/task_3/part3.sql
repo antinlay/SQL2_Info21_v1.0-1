@@ -209,42 +209,83 @@ $$ LANGUAGE plpgsql;
 CALL rec_checked_peer('result_p3_t8');
 FETCH ALL IN result_p3_t8;
 -- 9) Determine the percentage of peers who:
-CREATE OR REPLACE PROCEDURE percent_of_peers (IN cursor REFCURSOR) AS $$ BEGIN OPEN cursor FOR WITH all_peers_blocks AS (
+CREATE OR REPLACE PROCEDURE percent_of_peers (
+        IN cursor REFCURSOR,
+        block_1 VARCHAR,
+        block_2 VARCHAR
+    ) AS $$ BEGIN OPEN cursor FOR WITH all_peers_blocks AS (
         SELECT p.nickname,
             c.task
         FROM peers p
             LEFT JOIN checks c ON p.nickname = c.peer
     ),
-    peers_b2 AS (
-        SELECT DISTINCT ON (nickname) nickname
-        FROM all_peers_blocks a
-        WHERE a.task ~ ('^' || 'DO' || '[0-9]')
-    ),
     peers_b1 AS (
-        SELECT DISTINCT ON (nickname) nickname
+        SELECT DISTINCT ON (a.nickname) nickname
         FROM all_peers_blocks a
-        WHERE a.task ~ ('^' || 'C' || '[0-9]')
+        WHERE a.task ~ ('^' || block_1 || '[0-9]')
+    ),
+    peers_b2 AS (
+        SELECT DISTINCT ON (a.nickname) nickname
+        FROM all_peers_blocks a
+        WHERE a.task ~ ('^' || block_2 || '[0-9]')
     ),
     only_b2 AS(
-        SELECT b2.nickname
-        FROM peers_b2 b2
-        EXCEPT
-        SELECT b1.nickname
-        FROM peers_b1 b1
+        SELECT COUNT(b21.nickname) AS StartedBlock2
+        FROM (
+                SELECT b2.nickname
+                FROM peers_b2 b2
+                EXCEPT
+                SELECT b1.nickname
+                FROM peers_b1 b1
+            ) AS b21
     ),
     only_b1 AS(
-        SELECT b1.nickname
-        FROM peers_b1 b1
-        EXCEPT
-        SELECT b2.nickname
-        FROM peers_b2 b2
+        SELECT COUNT(b12.nickname) AS StartedBlock1
+        FROM (
+                SELECT b1.nickname
+                FROM peers_b1 b1
+                EXCEPT
+                SELECT b2.nickname
+                FROM peers_b2 b2
+            ) AS b12
     ),
     both_blocks AS (
-        SELECT b1.nickname
-        FROM peers_b1 b1
-            JOIN peers_b2 b2 ON b2.nickname = b1.nickname
+        SELECT COUNT(bb.nickname) AS StartedBothBlocks
+        FROM (
+                SELECT b1.nickname
+                FROM peers_b1 b1
+                    JOIN peers_b2 b2 ON b2.nickname = b1.nickname
+            ) AS bb
     )
-SELECT COUNT(nickname) AS DidntStartAnyBlock
-FROM all_peers_blocks
+SELECT ROUND(
+        CAST(b1.StartedBlock1 AS NUMERIC) / CAST(p.amount AS NUMERIC) * 100,
+        0
+    ) AS "StartedBlock1",
+    ROUND(
+        CAST(b2.StartedBlock2 AS NUMERIC) / CAST(p.amount AS NUMERIC) * 100,
+        0
+    ) AS "StartedBlock2",
+    ROUND(
+        CAST(bb.StartedBothBlocks AS NUMERIC) / CAST(p.amount AS NUMERIC) * 100,
+        0
+    ) AS "StartedBothBlocks",
+    ROUND(
+        CAST(p_null.amount AS NUMERIC) / CAST(p.amount AS NUMERIC) * 100,
+        0
+    ) AS "DidntStartAnyBlock"
+FROM (
+        SELECT COUNT(peers.nickname) AS amount
+        FROM peers
+    ) AS p,
+    (
+        SELECT COUNT(ap.nickname) AS amount
+        FROM all_peers_blocks ap
+        WHERE task IS NULL
+    ) AS p_null,
+    only_b1 b1,
+    only_b2 b2,
+    both_blocks bb;
 END;
 $$ LANGUAGE plpgsql;
+CALL percent_of_peers('result_p3_t9', 'DO', 'C');
+FETCH ALL IN result_p3_t9;
