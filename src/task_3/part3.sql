@@ -19,7 +19,7 @@ $$ LANGUAGE plpgsql;
 SELECT *
 FROM tp_human_view();
 -- DROP FUNCTION tp_human_view;
--- 2) Write a function that returns a table of the following form: user name, name of the checked task, number of XP received
+-- 2) Write a function that returns a table of the following form: user name, name of the checked task, number of xp received
 CREATE OR REPLACE FUNCTION checks_success () RETURNS TABLE (Peer VARCHAR, Task VARCHAR, Xp INT) AS $$ BEGIN RETURN QUERY
 SELECT checks.peer AS Peer,
     checks.task AS Task,
@@ -363,7 +363,7 @@ $$ LANGUAGE plpgsql;
 CALL complete_task12_not_3('result_p3_t11', 'DO4', 'DO6', 'CPP3');
 FETCH ALL IN result_p3_t11;
 -- 12) Using recursive common table expression, output the number of preceding tasks for each task
-CREATE OR REPLACE PROCEDURE output_proceding_tasks(IN result REFCURSOR) AS $$ BEGIN OPEN result FOR WITH RECURSIVE amount_before AS (
+CREATE OR REPLACE PROCEDURE output_proceding_tasks(IN cursor REFCURSOR) AS $$ BEGIN OPEN cursor FOR WITH RECURSIVE amount_before AS (
         (
             SELECT t.title AS task,
                 0 AS prevcount
@@ -384,3 +384,86 @@ END;
 $$ LANGUAGE plpgsql;
 CALL output_proceding_tasks('result_p3_t12');
 FETCH ALL IN result_p3_t12;
+-- 13) Find "lucky" days for checks. A day is considered "lucky" if it has at least N consecutive successful checks
+CREATE OR REPLACE PROCEDURE lucky_days(IN cursor REFCURSOR, N INT) AS $$ BEGIN OPEN cursor FOR WITH filter_checks AS (
+        SELECT c.id,
+            c.task,
+            c.date_check,
+            p2p.time_check,
+            p2p.check_state AS p2p_state,
+            v.check_state AS v_state,
+            t.max_xp
+        FROM checks c
+            LEFT JOIN p2p ON c.id = p2p.check_num
+            AND (
+                p2p.check_state = 'Success'
+                OR p2p.check_state = 'Failure'
+            )
+            LEFT JOIN verter v ON v.check_num = c.id
+            AND (
+                v.check_state = 'Success'
+                OR v.check_state = 'Failure'
+            )
+            JOIN tasks t ON t.title = c.task
+        ORDER BY c.date_check,
+            p2p.time_check
+    ),
+    case_checks AS (
+        SELECT fc.id,
+            fc.task,
+            fc.date_check,
+            fc.time_check,
+            CASE
+                WHEN (
+                    xp.xp_amount IS NULL
+                    OR xp.xp_amount < fc.max_xp * 0.8
+                    OR fc.p2p_state = 'Failure'
+                    OR fc.v_state = 'Failure'
+                ) THEN 0
+                ELSE 1
+            END AS c_result
+        FROM filter_checks fc
+            LEFT JOIN xp ON xp.check_num = fc.id
+    ),
+    checks_in_orders AS (
+        SELECT *,
+            SUM("c_result") OVER (
+                PARTITION BY date_check
+                ORDER BY date_check,
+                    time_check,
+                    id ROWS BETWEEN N - 1 PRECEDING AND CURRENT ROW
+            ) AS good_days
+        FROM case_checks
+    )
+SELECT date_check AS lucky_days
+FROM checks_in_orders
+GROUP BY date_check
+HAVING MAX(good_days) >= N;
+END;
+$$ LANGUAGE plpgsql;
+CALL lucky_days('result_p3_t13', 3);
+FETCH ALL IN result_p3_t13;
+-- 14) Find the peer with the highest amount of xp
+CREATE OR REPLACE PROCEDURE champion_xp(IN cursor REFCURSOR) AS $$ BEGIN OPEN cursor FOR WITH amount_xp AS (
+        SELECT c.peer,
+            c.task,
+            MAX(xp_amount) AS xp
+        FROM xp
+            LEFT JOIN checks c ON c.id = xp.check_num
+        GROUP BY c.peer,
+            c.task
+    ),
+    max_peer_tasks AS (
+        SELECT ax.peer,
+            SUM(xp) AS xp
+        FROM amount_xp ax
+        GROUP BY ax.peer
+    )
+SELECT *
+FROM max_peer_tasks
+ORDER BY xp DESC
+LIMIT 1;
+END;
+$$ LANGUAGE plpgsql;
+CALL champion_xp('result_p3_t14');
+FETCH ALL IN result_p3_t14;
