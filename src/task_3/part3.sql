@@ -289,3 +289,98 @@ END;
 $$ LANGUAGE plpgsql;
 CALL percent_of_peers('result_p3_t9', 'DO', 'C');
 FETCH ALL IN result_p3_t9;
+-- 10) Determine the percentage of peers who have ever successfully passed a check on their birthday
+CREATE OR REPLACE PROCEDURE checks_birthday (IN cursor REFCURSOR) AS $$ BEGIN OPEN cursor FOR WITH amount_fail AS (
+        SELECT COUNT(*) AS amount
+        FROM checks c
+            LEFT JOIN peers p ON c.peer = p.nickname
+            LEFT JOIN p2p ON p2p.check_num = c.id
+            LEFT JOIN verter v ON c.id = v.check_num
+        WHERE TO_CHAR(c.date_check, 'MM.DD') = TO_CHAR(p.birthday, 'MM.DD')
+            AND (
+                p2p.check_state = 'Failure'
+                AND (
+                    v.check_state = 'Failure'
+                    OR v.check_state IS NULL
+                )
+            )
+    ),
+    amount_success AS (
+        SELECT COUNT(*) AS amount
+        FROM checks c
+            LEFT JOIN peers p ON c.peer = p.nickname
+            LEFT JOIN p2p ON c.id = p2p.check_num
+            LEFT JOIN verter v ON c.id = v.check_num
+        WHERE TO_CHAR(c.date_check, 'MM.DD') = TO_CHAR(p.birthday, 'MM.DD')
+            AND p2p.check_state = 'Success'
+            AND (
+                v.check_state = 'Success'
+                OR v.check_state IS NULL
+            )
+    )
+SELECT ROUND(
+        100 * a_s.amount / NULLIF(a_s.amount + af.amount, 0),
+        0
+    ) AS SuccessfulChecks,
+    ROUND(
+        100 * af.amount / NULLIF(a_s.amount + af.amount, 0),
+        0
+    ) AS UnsuccessfulChecks
+FROM amount_fail af,
+    amount_success a_s;
+END;
+$$ LANGUAGE plpgsql;
+CALL checks_birthday('result_p3_t10');
+FETCH ALL IN result_p3_t10;
+-- 11) Determine all peers who did the given tasks 1 and 2, but did not do task 3
+CREATE OR REPLACE PROCEDURE complete_task12_not_3(
+        IN cursor REFCURSOR,
+        IN task_1 VARCHAR(50),
+        IN task_2 VARCHAR(50),
+        IN task_3 VARCHAR(50)
+    ) AS $$ BEGIN OPEN cursor FOR WITH success_tasks AS(
+        SELECT c.peer
+        FROM xp
+            LEFT JOIN checks c ON xp.check_num = c.id
+        WHERE c.task = task_1
+            OR c.task = task_2
+        GROUP BY c.peer
+        HAVING COUNT(c.task) = 2
+    ),
+    done_task_3 AS(
+        SELECT DISTINCT c.peer
+        FROM xp
+            LEFT JOIN checks c ON xp.check_num = c.id
+        WHERE c.task = task_3
+    )
+SELECT peer
+FROM success_tasks
+EXCEPT
+SELECT peer
+FROM done_task_3;
+END;
+$$ LANGUAGE plpgsql;
+CALL complete_task12_not_3('result_p3_t11', 'DO4', 'DO6', 'CPP3');
+FETCH ALL IN result_p3_t11;
+-- 12) Using recursive common table expression, output the number of preceding tasks for each task
+CREATE OR REPLACE PROCEDURE output_proceding_tasks(IN result REFCURSOR) AS $$ BEGIN OPEN result FOR WITH RECURSIVE amount_before AS (
+        (
+            SELECT t.title AS task,
+                0 AS prevcount
+            FROM tasks t
+            WHERE t.parent_task IS NULL
+        )
+        UNION ALL
+        (
+            SELECT t.title,
+                prevcount + 1
+            FROM tasks t
+                INNER JOIN amount_before ab ON ab.task = t.parent_task
+        )
+    )
+SELECT *
+FROM amount_before;
+END;
+$$ LANGUAGE plpgsql;
+CALL output_proceding_tasks('result_p3_t12');
+FETCH ALL IN result_p3_t12;
