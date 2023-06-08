@@ -5,10 +5,10 @@
             "server": "localhost",
             "port": 5432,
             "driver": "PostgreSQL",
-            "name": "janiecee",
-            "database": "janiecee",
-            "username": "janiecee",
-            "password": ""
+            "name": "info21",
+            "database": "info21",
+            "username": "postgres",
+            "password": "1234"
         }
     ]
 }
