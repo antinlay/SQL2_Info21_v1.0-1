@@ -485,3 +485,42 @@ END;
 $$ LANGUAGE plpgsql;
 CALL before_given_time('result_p3_t15', '09:00:00', 3);
 FETCH ALL IN result_p3_t15;
+-- 16) Determine the peers who left the campus more than M times during the last N days
+CREATE OR REPLACE PROCEDURE left_campus_times(IN cursor REFCURSOR, N INT, M INT) AS $$ BEGIN OPEN cursor FOR WITH left_the_campus AS (
+        SELECT peer,
+            date_state
+        FROM time_tracking
+        WHERE peer_state = 2
+            AND (CURRENT_DATE - date_state) < N
+        GROUP BY peer,
+            date_state
+    )
+SELECT peer
+FROM left_the_campus
+GROUP BY peer
+HAVING COUNT(peer) > M;
+END;
+$$ LANGUAGE plpgsql;
+CALL left_campus_times('result_p3_t16', 36, 3);
+FETCH ALL IN result_p3_t16;
+-- 17) Determine for each month the percentage of early entries
+CREATE OR REPLACE PROCEDURE before_given_time(IN cursor REFCURSOR) AS $$ BEGIN OPEN cursor FOR WITH total_number_of_entries AS (
+        SELECT date_trunc('month', date_state) AS month_start,
+            count(*) AS total_entries,
+            count(*) FILTER (
+                WHERE time_state < '12:00'::time
+            ) AS early_entries
+        FROM time_tracking tt
+            JOIN peers p ON tt.peer = p.nickname
+        WHERE TO_CHAR(tt.date_state, 'MM') = TO_CHAR(p.birthday, 'MM')
+            AND tt.peer_state = 1
+        GROUP BY month_start
+    )
+SELECT to_char(t.month_start, 'Month') AS month,
+    round(100.0 * early_entries / total_entries, 0) AS earlyentries
+FROM total_number_of_entries t
+ORDER BY month_start;
+END;
+$$ LANGUAGE plpgsql;
+CALL before_given_time('result_p3_t17');
+FETCH ALL IN result_p3_t17;
