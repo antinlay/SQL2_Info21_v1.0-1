@@ -467,3 +467,21 @@ END;
 $$ LANGUAGE plpgsql;
 CALL champion_xp('result_p3_t14');
 FETCH ALL IN result_p3_t14;
+-- 15) Determine the peers that came before the given time at least N times during the whole time
+CREATE OR REPLACE PROCEDURE before_given_time(IN cursor REFCURSOR, tm time, N INT) AS $$ BEGIN OPEN cursor FOR WITH came_to_campus AS (
+        SELECT peer,
+            date_state
+        FROM time_tracking
+        WHERE peer_state = 1
+            AND time_state < tm
+        GROUP BY peer,
+            date_state
+    )
+SELECT peer
+FROM came_to_campus
+GROUP BY peer
+HAVING COUNT(peer) >= N;
+END;
+$$ LANGUAGE plpgsql;
+CALL before_given_time('result_p3_t15', '09:00:00', 3);
+FETCH ALL IN result_p3_t15;
