@@ -106,52 +106,52 @@ $$;
 -- Run from SU POSTGRES (sudo su postgres; psql; GRANT pg_write_server_files TO postgres; GRANT pg_read_server_files TO postgres;)
 CALL import_csv_data(
     'peers',
-    '/Users/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/task_1/Peers.csv',
+    '/Users/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/importCSV/Peers.csv',
     ','
 );
 CALL import_csv_data(
     'tasks',
-    '/Users/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/task_1/Tasks.csv',
+    '/Users/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/importCSV/Tasks.csv',
     ','
 );
 CALL import_csv_data(
     'checks',
-    '/Users/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/task_1/Checks.csv',
+    '/Users/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/importCSV/Checks.csv',
     ','
 );
 CALL import_csv_data(
     'p2p',
-    '/Users/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/task_1/P2P.csv',
+    '/Users/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/importCSV/P2P.csv',
     ','
 );
 CALL import_csv_data(
     'verter',
-    '/Users/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/task_1/Verter.csv',
+    '/Users/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/importCSV/Verter.csv',
     ','
 );
 CALL import_csv_data(
     'transfered_points',
-    '/Users/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/task_1/Transfered_points.csv',
+    '/Users/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/importCSV/Transfered_points.csv',
     ','
 );
 CALL import_csv_data(
     'friend',
-    '/Users/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/task_1/Friends.csv',
+    '/Users/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/importCSV/Friends.csv',
     ','
 );
 CALL import_csv_data(
     'recomendations',
-    '/Users/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/task_1/Recomendations.csv',
+    '/Users/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/importCSV/Recomendations.csv',
     ','
 );
 CALL import_csv_data(
     'xp',
-    '/Users/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/task_1/Xp.csv',
+    '/Users/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/importCSV/Xp.csv',
     ','
 );
 CALL import_csv_data(
     'time_tracking',
-    '/Users/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/task_1/Time_tracking.csv',
+    '/Users/janiecee/Documents/github/SQL2_Info21_v1.0-1/src/importCSV/Time_tracking.csv',
     ','
 );
 -- DROP OWNED BY janiecee;
